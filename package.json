@@ -1,0 +1,53 @@
+{
+  "name": "autoclicker",
+  "version": "1.0.0",
+  "description": "AutoClicker - Desktop Auto Clicker",
+  "main": "src/main/index.js",
+  "scripts": {
+    "start": "electron .",
+    "pack": "electron-builder --dir",
+    "dist": "electron-builder",
+    "dist:win": "electron-builder --win"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "electron": "^42.3.3",
+    "electron-builder": "^26.15.2"
+  },
+  "dependencies": {
+    "koffi": "^3.0.2"
+  },
+  "build": {
+    "appId": "com.autoclicker.app",
+    "productName": "AutoClicker",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "src/**/*",
+      "renderer/**/*",
+      "preload.js",
+      "node_modules/**/*"
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": ["x64"]
+        }
+      ],
+      "icon": null
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "shortcutName": "AutoClicker"
+    },
+    "extraMetadata": {
+      "main": "src/main/index.js"
+    }
+  }
+}

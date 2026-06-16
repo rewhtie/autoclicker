@@ -1,0 +1,99 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  width: 100vw; height: 100vh; overflow: hidden;
+  cursor: crosshair;
+  background: rgba(0,0,0,0.3);
+  position: relative;
+}
+.crosshair {
+  position: fixed; pointer-events: none;
+  z-index: 9999;
+  display: none;
+}
+.crosshair .h {
+  position: fixed; height: 1px; background: #e94560;
+  left: 0; right: 0; top: 50%; opacity: 0.7;
+}
+.crosshair .v {
+  position: fixed; width: 1px; background: #e94560;
+  top: 0; bottom: 0; left: 50%; opacity: 0.7;
+}
+.crosshair .dot {
+  position: fixed; width: 8px; height: 8px;
+  background: #e94560; border-radius: 50%;
+  top: 50%; left: 50%; transform: translate(-50%,-50%);
+}
+.coord-label {
+  position: fixed; pointer-events: none;
+  background: #e94560; color: #fff;
+  font: 14px/1.4 monospace; padding: 4px 10px;
+  border-radius: 4px; z-index: 9999;
+  display: none;
+  bottom: 20px; left: 50%; transform: translateX(-50%);
+}
+.hint-text {
+  position: fixed; pointer-events: none;
+  color: #fff; font: 13px sans-serif;
+  text-align: center; z-index: 9998;
+  bottom: 60px; left: 50%; transform: translateX(-50%);
+  background: rgba(0,0,0,0.6); padding: 6px 14px;
+  border-radius: 6px;
+}
+</style>
+</head>
+<body>
+<div class="crosshair" id="crosshair">
+  <div class="h"></div>
+  <div class="v"></div>
+  <div class="dot"></div>
+</div>
+<div class="coord-label" id="coord-label">点击选择位置</div>
+<div class="hint-text">点击鼠标左键选取点击位置，按 ESC 取消</div>
+
+<script>
+const crosshair = document.getElementById("crosshair");
+const coordLabel = document.getElementById("coord-label");
+
+let displayOrigin = { x: 0, y: 0 };
+
+window.electronAPI.onOverlayReady((data) => {
+  crosshair.style.display = "block";
+  if (data && data.displayBounds) {
+    displayOrigin = { x: data.displayBounds.x, y: data.displayBounds.y };
+  }
+});
+
+function toGlobal(e) {
+  // clientX/Y are CSS px relative to overlay window; overlay covers the
+  // target display, so global DIP = display.bounds + client offset.
+  return {
+    x: Math.round(displayOrigin.x + e.clientX),
+    y: Math.round(displayOrigin.y + e.clientY),
+  };
+}
+
+document.addEventListener("mousemove", (e) => {
+  const p = toGlobal(e);
+  coordLabel.textContent = `X: ${p.x}  Y: ${p.y}`;
+  coordLabel.style.display = "block";
+});
+
+document.addEventListener("click", (e) => {
+  e.preventDefault();
+  window.electronAPI.pickPosition(toGlobal(e));
+});
+
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Escape") {
+    window.electronAPI.closeOverlay();
+  }
+});
+</script>
+</body>
+</html>

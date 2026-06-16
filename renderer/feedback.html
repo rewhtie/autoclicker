@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<style>
+html, body {
+  margin: 0; padding: 0;
+  width: 100vw; height: 100vh;
+  overflow: hidden;
+  background: transparent;
+  pointer-events: none;
+  -webkit-user-select: none;
+}
+.ripple {
+  position: fixed;
+  width: 12px; height: 12px;
+  border-radius: 50%;
+  border: 2px solid rgba(233, 69, 96, 0.95);
+  background: rgba(233, 69, 96, 0.25);
+  transform: translate(-50%, -50%) scale(0.4);
+  box-shadow: 0 0 12px rgba(233, 69, 96, 0.6);
+  animation: ripple-anim 700ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  will-change: transform, opacity;
+}
+.ripple::after {
+  content: "";
+  position: absolute;
+  inset: -6px;
+  border: 1px solid rgba(233, 69, 96, 0.5);
+  border-radius: 50%;
+  animation: ripple-outer 700ms ease-out forwards;
+}
+@keyframes ripple-anim {
+  0%   { transform: translate(-50%, -50%) scale(0.4); opacity: 1; }
+  60%  { opacity: 0.85; }
+  100% { transform: translate(-50%, -50%) scale(6); opacity: 0; }
+}
+@keyframes ripple-outer {
+  0%   { transform: scale(0.6); opacity: 0.9; }
+  100% { transform: scale(3.5); opacity: 0; }
+}
+.dot {
+  position: fixed;
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 0 8px rgba(255,255,255,0.9), 0 0 16px rgba(233,69,96,0.9);
+  transform: translate(-50%, -50%);
+  animation: dot-fade 350ms ease-out forwards;
+}
+@keyframes dot-fade {
+  0%   { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+  100% { opacity: 0; transform: translate(-50%, -50%) scale(0.4); }
+}
+</style>
+</head>
+<body>
+<script>
+window.electronAPI.onRipple(({ x, y }) => {
+  const r = document.createElement('div');
+  r.className = 'ripple';
+  r.style.left = x + 'px';
+  r.style.top  = y + 'px';
+  document.body.appendChild(r);
+
+  const d = document.createElement('div');
+  d.className = 'dot';
+  d.style.left = x + 'px';
+  d.style.top  = y + 'px';
+  document.body.appendChild(d);
+
+  setTimeout(() => r.remove(), 750);
+  setTimeout(() => d.remove(), 400);
+});
+</script>
+</body>
+</html>
