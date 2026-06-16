@@ -1,4 +1,4 @@
-﻿const koffi = require('koffi');
+const koffi = require('koffi');
 const { int, uint, uint64, int64, long: koffiLong } = koffi.types;
 
 const user32 = koffi.load('user32.dll');
@@ -18,6 +18,7 @@ let clickCount = 0;
 let clickTimer = null;
 let onClickCallback = null;
 let onTickCallback = null;
+let pointCursor = 0; // index into the current points list, for round-robin
 
 function doClick(x, y) {
   const hwnd = windowFromPoint({ x, y });
@@ -36,20 +37,32 @@ function doClick(x, y) {
   if (onClickCallback) onClickCallback(clickCount);
 }
 
+// Resolve which DIP point to click next. Returns null if there is nothing
+// reasonable to click (e.g. multi-point mode with empty list).
+function resolveNextPoint(s) {
+  const pts = Array.isArray(s.points) ? s.points : [];
+  if (pts.length > 0) {
+    const p = pts[pointCursor % pts.length];
+    pointCursor = (pointCursor + 1) % pts.length;
+    return { x: p.x, y: p.y };
+  }
+  if (s.useCenter) {
+    const { getScreenCenter } = require('./settings');
+    return getScreenCenter(s.displayIndex);
+  }
+  return null;
+}
+
 function startClicking(settings) {
   if (clickTimer) return;
   clickCount = 0;
+  pointCursor = 0;
 
   function tick() {
     const s = settings();
-    let x, y;
-    if (s.useCenter) {
-      const { getScreenCenter } = require('./settings');
-      const c = getScreenCenter(s.displayIndex);
-      x = c.x; y = c.y;
-    } else {
-      x = s.x; y = s.y;
-    }
+    const target = resolveNextPoint(s);
+    if (!target) return;
+    const { x, y } = target;
     // x/y here are DIP (electron screen API). Convert to physical for
     // Win32 SendMessage / WindowFromPoint, otherwise on HiDPI / scaled
     // secondary monitors the click lands on the wrong window.
@@ -70,6 +83,7 @@ function stopClicking() {
     clickTimer = null;
   }
   clickCount = 0;
+  pointCursor = 0;
 }
 
 function isClicking() {

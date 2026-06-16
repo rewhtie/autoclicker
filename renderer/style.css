@@ -185,6 +185,97 @@ header h1 {
 .actions {
   margin-top: 4px;
 }
+
+.btn-row {
+  display: flex;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.btn-mini {
+  background: #0f3460;
+  color: #ccc;
+  padding: 6px 10px;
+  font-size: 12px;
+  flex: 1;
+}
+.btn-mini:hover:not(:disabled) {
+  background: #1a4a7a;
+  color: #fff;
+}
+.btn-mini:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn-danger {
+  background: #5a1a2a;
+  color: #ffb3b3;
+}
+.btn-danger:hover:not(:disabled) {
+  background: #7a2030;
+  color: #fff;
+}
+
+.point-list {
+  list-style: none;
+  margin: 4px 0 0;
+  padding: 0;
+  max-height: 160px;
+  overflow-y: auto;
+  border: 1px solid #2a2a4a;
+  border-radius: 6px;
+  background: #0f1d3a;
+}
+.point-list .point-empty {
+  padding: 12px;
+  text-align: center;
+  font-size: 12px;
+  color: #6a6a80;
+}
+.point-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  font-size: 13px;
+  color: #ccc;
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+}
+.point-item:last-child { border-bottom: none; }
+.point-index {
+  display: inline-block;
+  min-width: 22px;
+  height: 22px;
+  line-height: 22px;
+  text-align: center;
+  background: #e94560;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  border-radius: 50%;
+}
+.point-coord {
+  flex: 1;
+  font-family: monospace;
+  color: #e0e0e0;
+}
+.point-remove {
+  background: transparent;
+  border: none;
+  color: #888;
+  font-size: 16px;
+  cursor: pointer;
+  padding: 0 6px;
+  line-height: 1;
+}
+.point-remove:hover:not(:disabled) {
+  color: #e94560;
+}
+.point-remove:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
 .sel {
   background: #0f3460;
   border: 1px solid #2a2a4a;

@@ -1,7 +1,11 @@
-﻿const { app, BrowserWindow, ipcMain, screen, globalShortcut } = require('electron');
+const { app, BrowserWindow, ipcMain, screen, globalShortcut } = require('electron');
 const path = require('path');
 
-const { getSettings, updateSettings, getScreenCenter } = require('./settings');
+const {
+  getSettings, updateSettings, getScreenCenter,
+  listSchemes, selectScheme, saveCurrentScheme,
+  createScheme, renameScheme, deleteScheme, ensureLoaded,
+} = require('./settings');
 const clicker = require('./clicker');
 const { createOverlayWindow, closeOverlay } = require('./overlay');
 const { openFeedbackWindow, closeFeedbackWindow, spawnRipple } = require('./feedback');
@@ -10,8 +14,8 @@ let mainWindow = null;
 
 function createMainWindow() {
   mainWindow = new BrowserWindow({
-    width: 480,
-    height: 620,
+    width: 520,
+    height: 760,
     resizable: false,
     webPreferences: {
       preload: path.join(__dirname, '..', '..', 'preload.js'),
@@ -71,6 +75,32 @@ function setupIPC() {
     return true;
   });
   ipcMain.handle('close-overlay', () => { closeOverlay(); return true; });
+
+  // --- Schemes -------------------------------------------------------------
+  ipcMain.handle('schemes-list', () => listSchemes());
+  ipcMain.handle('schemes-select', (_e, id) => {
+    if (clicker.isClicking()) {
+      clicker.stopClicking();
+      closeFeedbackWindow();
+      if (mainWindow && !mainWindow.isDestroyed()) {
+        mainWindow.webContents.send('state-changed', { isClicking: false });
+      }
+    }
+    const cur = selectScheme(id);
+    return { current: cur, settings: getSettings() };
+  });
+  ipcMain.handle('schemes-save', () => saveCurrentScheme());
+  ipcMain.handle('schemes-create', (_e, payload) => {
+    const name = payload && payload.name;
+    const fromCurrent = !!(payload && payload.fromCurrent);
+    const cur = createScheme(name, { fromCurrent });
+    return { current: cur, settings: getSettings() };
+  });
+  ipcMain.handle('schemes-rename', (_e, payload) => renameScheme(payload.id, payload.name));
+  ipcMain.handle('schemes-delete', (_e, id) => {
+    const ok = deleteScheme(id);
+    return { ok, list: listSchemes(), settings: getSettings() };
+  });
 }
 
 function registerHotkeys() {
@@ -87,15 +117,24 @@ clicker.setOnTickCallback(({ x, y }) => {
   spawnRipple(x, y);
 });
 
-ipcMain.on('position-picked', (_e, coords) => {
-  updateSettings({ useCenter: false, x: coords.x, y: coords.y });
+// Position picking: now sends an array of {x,y} from the overlay when the user
+// finishes (right-click). We replace the current scheme's points with the
+// picked list and turn off useCenter.
+ipcMain.on('positions-picked', (_e, payload) => {
+  const points = Array.isArray(payload && payload.points) ? payload.points : [];
+  if (points.length === 0) {
+    closeOverlay();
+    return;
+  }
+  updateSettings({ useCenter: false, points });
   closeOverlay();
   if (mainWindow && !mainWindow.isDestroyed()) {
-    mainWindow.webContents.send('position-updated', { x: coords.x, y: coords.y });
+    mainWindow.webContents.send('positions-updated', { points });
   }
 });
 
 app.whenReady().then(() => {
+  ensureLoaded();
   setupIPC();
   createMainWindow();
   registerHotkeys();

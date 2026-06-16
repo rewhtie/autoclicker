@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
@@ -14,6 +14,19 @@
   </header>
 
   <section class="card">
+    <h2>方案</h2>
+    <div class="row">
+      <select id="scheme-select" class="sel"></select>
+    </div>
+    <div class="row btn-row">
+      <button id="scheme-save"   class="btn btn-mini">保存</button>
+      <button id="scheme-new"    class="btn btn-mini">新建</button>
+      <button id="scheme-rename" class="btn btn-mini">重命名</button>
+      <button id="scheme-delete" class="btn btn-mini btn-danger">删除</button>
+    </div>
+  </section>
+
+  <section class="card">
     <h2>目标显示器</h2>
     <div class="row">
       <select id="display-select" class="sel"></select>
@@ -23,18 +36,19 @@
   <section class="card">
     <h2>点击位置</h2>
     <div class="row">
-      <label>X</label>
-      <input type="number" id="pos-x" min="0">
-      <label>Y</label>
-      <input type="number" id="pos-y" min="0">
-    </div>
-    <div class="row">
       <label class="checkbox-label">
         <input type="checkbox" id="use-center" checked>
-        使用屏幕正中心
+        使用屏幕正中心（无拾取点时）
       </label>
     </div>
-    <button id="pick-position" class="btn btn-secondary">拾取屏幕位置</button>
+    <ul id="point-list" class="point-list">
+      <li class="point-empty">尚未拾取任何点</li>
+    </ul>
+    <div class="row btn-row">
+      <button id="pick-position" class="btn btn-secondary">拾取屏幕位置</button>
+      <button id="clear-points"  class="btn btn-mini">清空</button>
+    </div>
+    <p class="hint">左键添加，右键完成，ESC 取消。多点会按顺序循环点击。</p>
   </section>
 
   <section class="card">

@@ -3,3 +3,6 @@ dist/
 .DS_Store
 *.log
 Thumbs.db
+
+# 用户本地保存的方案数据，由应用在运行时写入
+data/
