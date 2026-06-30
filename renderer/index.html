@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
@@ -41,6 +41,12 @@
         使用屏幕正中心（无拾取点时）
       </label>
     </div>
+    <div class="row">
+      <label class="checkbox-label">
+        <input type="checkbox" id="show-click-effect" checked>
+        显示鼠标点击特效
+      </label>
+    </div>
     <ul id="point-list" class="point-list">
       <li class="point-empty">尚未拾取任何点</li>
     </ul>
@@ -76,6 +82,28 @@
   <footer class="hint hotkey-hint">
     <span>快捷键: <kbd>F6</kbd> 开始 / 停止</span>
   </footer>
+</div>
+<div id="scheme-dialog-backdrop" class="dialog-backdrop hidden">
+  <div class="dialog" role="dialog" aria-modal="true" aria-labelledby="scheme-dialog-title">
+    <h2 id="scheme-dialog-title">编辑方案</h2>
+    <label class="field-label" for="scheme-name-input">方案名称</label>
+    <input type="text" id="scheme-name-input" class="text-input" maxlength="40" autocomplete="off">
+
+    <label class="checkbox-label dialog-check" id="scheme-copy-row">
+      <input type="checkbox" id="scheme-copy-current" checked>
+      复制当前配置
+    </label>
+
+    <label class="checkbox-label dialog-check">
+      <input type="checkbox" id="scheme-dialog-effect" checked>
+      显示鼠标点击特效
+    </label>
+
+    <div class="dialog-actions">
+      <button id="scheme-dialog-cancel" class="btn btn-mini">取消</button>
+      <button id="scheme-dialog-submit" class="btn btn-primary dialog-submit">保存</button>
+    </div>
+  </div>
 </div>
 <script src="renderer.js"></script>
 </body>

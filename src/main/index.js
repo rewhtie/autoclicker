@@ -30,12 +30,21 @@ function createMainWindow() {
   mainWindow.on('closed', () => { mainWindow = null; });
 }
 
+function syncFeedbackWindowForSettings() {
+  const s = getSettings();
+  if (s.showClickEffect) {
+    openFeedbackWindow(s.displayIndex);
+  } else {
+    closeFeedbackWindow();
+  }
+}
+
 function toggleClicking() {
   if (clicker.isClicking()) {
     clicker.stopClicking();
     closeFeedbackWindow();
   } else {
-    openFeedbackWindow(getSettings().displayIndex);
+    syncFeedbackWindowForSettings();
     clicker.startClicking(() => getSettings());
   }
   const state = clicker.isClicking();
@@ -62,8 +71,8 @@ function setupIPC() {
     updateSettings(s);
     if (clicker.isClicking()) {
       clicker.stopClicking();
-      // Re-open feedback on the (possibly new) target display.
-      openFeedbackWindow(getSettings().displayIndex);
+      // Re-open or close feedback based on the latest target display and effect setting.
+      syncFeedbackWindowForSettings();
       clicker.startClicking(() => getSettings());
     }
     return getSettings();

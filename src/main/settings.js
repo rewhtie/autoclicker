@@ -30,6 +30,7 @@ const defaultSettings = () => ({
   useCenter: true,
   intervalMs: 5000,
   displayIndex: 0,
+  showClickEffect: true,
 });
 
 let settings = defaultSettings();
@@ -105,6 +106,7 @@ function defaultStore() {
         useCenter: true,
         intervalMs: 5000,
         displayIndex: 0,
+        showClickEffect: true,
       },
     ],
   };
@@ -126,6 +128,9 @@ function sanitizeScheme(s, fallback) {
     useCenter: typeof s.useCenter === 'boolean' ? s.useCenter : true,
     intervalMs: Number.isFinite(s.intervalMs) ? Math.max(50, Math.round(s.intervalMs)) : 5000,
     displayIndex: Number.isInteger(s.displayIndex) && s.displayIndex >= 0 ? s.displayIndex : 0,
+    showClickEffect: typeof s.showClickEffect === 'boolean'
+      ? s.showClickEffect
+      : (typeof fb.showClickEffect === 'boolean' ? fb.showClickEffect : true),
   };
 }
 
@@ -169,6 +174,7 @@ function applyCurrentSchemeToSettings() {
     useCenter: cur.useCenter,
     intervalMs: cur.intervalMs,
     displayIndex: cur.displayIndex,
+    showClickEffect: cur.showClickEffect,
   };
 }
 
@@ -224,6 +230,7 @@ function createScheme(name, opts) {
     useCenter: seed.useCenter,
     intervalMs: seed.intervalMs,
     displayIndex: seed.displayIndex,
+    showClickEffect: seed.showClickEffect,
   });
   store.schemes.push(scheme);
   store.currentId = scheme.id;

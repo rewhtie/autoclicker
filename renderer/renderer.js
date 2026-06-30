@@ -19,6 +19,17 @@ const schemeSave    = $("scheme-save");
 const schemeNew     = $("scheme-new");
 const schemeRename  = $("scheme-rename");
 const schemeDelete  = $("scheme-delete");
+const showClickEffect = $("show-click-effect");
+const schemeDialogBackdrop = $("scheme-dialog-backdrop");
+const schemeDialogTitle = $("scheme-dialog-title");
+const schemeNameInput = $("scheme-name-input");
+const schemeCopyRow = $("scheme-copy-row");
+const schemeCopyCurrent = $("scheme-copy-current");
+const schemeDialogEffect = $("scheme-dialog-effect");
+const schemeDialogCancel = $("scheme-dialog-cancel");
+const schemeDialogSubmit = $("scheme-dialog-submit");
+
+let schemeDialogMode = "new";
 
 // --- Displays ---------------------------------------------------------------
 
@@ -61,6 +72,7 @@ async function loadSettings() {
     displaySelect.value = s.displayIndex || 0;
   }
   useCenter.checked = !!s.useCenter;
+  showClickEffect.checked = s.showClickEffect !== false;
   intervalInput.value = s.intervalMs;
   updateIntervalDisplay(s.intervalMs);
   currentPoints = Array.isArray(s.points) ? s.points.slice() : [];
@@ -79,6 +91,7 @@ function updateUI(running) {
   statusBadge.textContent = running ? "点击中" : "停止";
   statusBadge.classList.toggle("active", running);
   useCenter.disabled = running;
+  showClickEffect.disabled = running;
   intervalInput.disabled = running;
   pickBtn.disabled = running;
   clearBtn.disabled = running;
@@ -97,6 +110,7 @@ function getCurrentFormSettings() {
     useCenter: useCenter.checked,
     intervalMs: parseInt(intervalInput.value) || 5000,
     displayIndex: parseInt(displaySelect.value) || 0,
+    showClickEffect: showClickEffect.checked,
   };
 }
 
@@ -132,26 +146,81 @@ schemeSave.addEventListener("click", async () => {
   flashButton(schemeSave, "已保存");
 });
 
-schemeNew.addEventListener("click", async () => {
-  const name = prompt("新方案名称：", "新方案");
-  if (name === null) return;
-  // Push current form state first so "新建（基于当前）"语义更直观.
-  await window.electronAPI.updateSettings(getCurrentFormSettings());
-  const fromCurrent = confirm("使用当前设置（点位、间隔、显示器）作为新方案的初始值？\n\n确定 = 复用当前设置\n取消 = 使用默认空白方案");
-  await window.electronAPI.createScheme(name.trim() || "新方案", fromCurrent);
-  await loadSchemes();
-  await loadSettings();
+function openSchemeDialog(mode) {
+  schemeDialogMode = mode;
+  const current = schemeSelect.options[schemeSelect.selectedIndex];
+  const currentName = current ? current.textContent : "";
+
+  if (mode === "new") {
+    schemeDialogTitle.textContent = "新建方案";
+    schemeDialogSubmit.textContent = "创建";
+    schemeNameInput.value = "新方案";
+    schemeCopyRow.classList.remove("hidden");
+    schemeCopyCurrent.checked = true;
+    schemeDialogEffect.checked = showClickEffect.checked;
+  } else {
+    schemeDialogTitle.textContent = "编辑方案";
+    schemeDialogSubmit.textContent = "保存";
+    schemeNameInput.value = currentName;
+    schemeCopyRow.classList.add("hidden");
+    schemeCopyCurrent.checked = true;
+    schemeDialogEffect.checked = showClickEffect.checked;
+  }
+
+  schemeDialogBackdrop.classList.remove("hidden");
+  schemeNameInput.focus();
+  schemeNameInput.select();
+}
+
+function closeSchemeDialog() {
+  schemeDialogBackdrop.classList.add("hidden");
+}
+
+schemeNew.addEventListener("click", () => {
+  openSchemeDialog("new");
 });
 
-schemeRename.addEventListener("click", async () => {
-  const current = schemeSelect.options[schemeSelect.selectedIndex];
-  const oldName = current ? current.textContent : "";
-  const name = prompt("重命名方案：", oldName);
-  if (name === null) return;
-  const trimmed = name.trim();
-  if (!trimmed) return;
-  await window.electronAPI.renameScheme(currentSchemeId, trimmed);
+schemeRename.addEventListener("click", () => {
+  openSchemeDialog("edit");
+});
+
+schemeDialogCancel.addEventListener("click", closeSchemeDialog);
+
+schemeDialogBackdrop.addEventListener("click", (e) => {
+  if (e.target === schemeDialogBackdrop) closeSchemeDialog();
+});
+
+schemeDialogBackdrop.addEventListener("keydown", (e) => {
+  if (e.key === "Escape") closeSchemeDialog();
+  if (e.key === "Enter") schemeDialogSubmit.click();
+});
+
+schemeDialogSubmit.addEventListener("click", async () => {
+  const name = schemeNameInput.value.trim();
+  if (!name) {
+    schemeNameInput.focus();
+    return;
+  }
+
+  if (schemeDialogMode === "new") {
+    // Persist current form first so copied schemes include unsaved edits.
+    await window.electronAPI.updateSettings(getCurrentFormSettings());
+    await window.electronAPI.createScheme(name, schemeCopyCurrent.checked);
+    // For a blank new scheme, apply the dialog's effect switch after creation.
+    if (!schemeCopyCurrent.checked) {
+      await window.electronAPI.updateSettings({ showClickEffect: schemeDialogEffect.checked });
+      await window.electronAPI.saveScheme();
+    }
+  } else {
+    showClickEffect.checked = schemeDialogEffect.checked;
+    await window.electronAPI.updateSettings(getCurrentFormSettings());
+    await window.electronAPI.renameScheme(currentSchemeId, name);
+    await window.electronAPI.saveScheme();
+  }
+
+  closeSchemeDialog();
   await loadSchemes();
+  await loadSettings();
 });
 
 schemeDelete.addEventListener("click", async () => {
@@ -175,6 +244,10 @@ toggleBtn.addEventListener("click", async () => {
 
 useCenter.addEventListener("change", async () => {
   await window.electronAPI.updateSettings({ useCenter: useCenter.checked });
+});
+
+showClickEffect.addEventListener("change", async () => {
+  await window.electronAPI.updateSettings({ showClickEffect: showClickEffect.checked });
 });
 
 displaySelect.addEventListener("change", async () => {
