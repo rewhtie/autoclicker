@@ -1,6 +1,6 @@
 {
-  "name": "autoclicker",
-  "version": "1.0.0",
+  "name": "鼠标自动点击",
+  "version": "1.0.1",
   "description": "AutoClicker - Desktop Auto Clicker",
   "main": "src/main/index.js",
   "scripts": {
@@ -31,7 +31,7 @@
       "preload.js",
       "node_modules/**/*"
     ],
-    "win": {
+    "win": {     
       "target": [
         {
           "target": "nsis",

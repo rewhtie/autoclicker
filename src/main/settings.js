@@ -31,6 +31,10 @@ const defaultSettings = () => ({
   intervalMs: 5000,
   displayIndex: 0,
   showClickEffect: true,
+  // 'mouse' clicks points; 'keyboard' presses a key into the focused window.
+  mode: 'mouse',
+  keyCode: 0x20,     // VK_SPACE
+  keyIntervalMs: 5000,
 });
 
 let settings = defaultSettings();
@@ -107,6 +111,9 @@ function defaultStore() {
         intervalMs: 5000,
         displayIndex: 0,
         showClickEffect: true,
+        mode: 'mouse',
+        keyCode: 0x20,
+        keyIntervalMs: 5000,
       },
     ],
   };
@@ -131,6 +138,9 @@ function sanitizeScheme(s, fallback) {
     showClickEffect: typeof s.showClickEffect === 'boolean'
       ? s.showClickEffect
       : (typeof fb.showClickEffect === 'boolean' ? fb.showClickEffect : true),
+    mode: s.mode === 'keyboard' ? 'keyboard' : 'mouse',
+    keyCode: Number.isFinite(s.keyCode) ? Math.max(0, Math.round(s.keyCode)) : 0x20,
+    keyIntervalMs: Number.isFinite(s.keyIntervalMs) ? Math.max(50, Math.round(s.keyIntervalMs)) : 5000,
   };
 }
 
@@ -175,6 +185,9 @@ function applyCurrentSchemeToSettings() {
     intervalMs: cur.intervalMs,
     displayIndex: cur.displayIndex,
     showClickEffect: cur.showClickEffect,
+    mode: cur.mode,
+    keyCode: cur.keyCode,
+    keyIntervalMs: cur.keyIntervalMs,
   };
 }
 
@@ -231,6 +244,9 @@ function createScheme(name, opts) {
     intervalMs: seed.intervalMs,
     displayIndex: seed.displayIndex,
     showClickEffect: seed.showClickEffect,
+    mode: seed.mode,
+    keyCode: seed.keyCode,
+    keyIntervalMs: seed.keyIntervalMs,
   });
   store.schemes.push(scheme);
   store.currentId = scheme.id;

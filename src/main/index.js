@@ -39,19 +39,36 @@ function syncFeedbackWindowForSettings() {
   }
 }
 
+function isActive() {
+  return clicker.isClicking() || clicker.isKeyPressing();
+}
+
 function toggleClicking() {
-  if (clicker.isClicking()) {
-    clicker.stopClicking();
-    closeFeedbackWindow();
+  if (isActive()) {
+    stopActive();
+  } else {
+    startActive();
+  }
+  if (mainWindow && !mainWindow.isDestroyed()) {
+    mainWindow.webContents.send('state-changed', { isClicking: isActive() });
+  }
+  return { isClicking: isActive() };
+}
+
+function startActive() {
+  const s = getSettings();
+  if (s.mode === 'keyboard') {
+    clicker.startKeyPressing(() => getSettings());
   } else {
     syncFeedbackWindowForSettings();
     clicker.startClicking(() => getSettings());
   }
-  const state = clicker.isClicking();
-  if (mainWindow && !mainWindow.isDestroyed()) {
-    mainWindow.webContents.send('state-changed', { isClicking: state });
-  }
-  return { isClicking: state };
+}
+
+function stopActive() {
+  clicker.stopClicking();
+  clicker.stopKeyPressing();
+  closeFeedbackWindow();
 }
 
 function setupIPC() {
@@ -66,14 +83,12 @@ function setupIPC() {
   });
 
   ipcMain.handle('get-screen-center', (_e, displayIndex) => getScreenCenter(displayIndex));
-  ipcMain.handle('get-settings', () => ({ ...getSettings(), isClicking: clicker.isClicking() }));
+  ipcMain.handle('get-settings', () => ({ ...getSettings(), isClicking: isActive() }));
   ipcMain.handle('update-settings', (_e, s) => {
     updateSettings(s);
-    if (clicker.isClicking()) {
-      clicker.stopClicking();
-      // Re-open or close feedback based on the latest target display and effect setting.
-      syncFeedbackWindowForSettings();
-      clicker.startClicking(() => getSettings());
+    if (isActive()) {
+      stopActive();
+      startActive();
     }
     return getSettings();
   });
@@ -88,9 +103,8 @@ function setupIPC() {
   // --- Schemes -------------------------------------------------------------
   ipcMain.handle('schemes-list', () => listSchemes());
   ipcMain.handle('schemes-select', (_e, id) => {
-    if (clicker.isClicking()) {
-      clicker.stopClicking();
-      closeFeedbackWindow();
+    if (isActive()) {
+      stopActive();
       if (mainWindow && !mainWindow.isDestroyed()) {
         mainWindow.webContents.send('state-changed', { isClicking: false });
       }
@@ -119,6 +133,12 @@ function registerHotkeys() {
 clicker.setOnClickCallback((count) => {
   if (mainWindow && !mainWindow.isDestroyed()) {
     mainWindow.webContents.send('click-performed', { count });
+  }
+});
+
+clicker.setOnKeyCallback((count) => {
+  if (mainWindow && !mainWindow.isDestroyed()) {
+    mainWindow.webContents.send('key-performed', { count });
   }
 });
 
@@ -151,6 +171,7 @@ app.whenReady().then(() => {
 
 app.on('window-all-closed', () => {
   clicker.stopClicking();
+  clicker.stopKeyPressing();
   closeFeedbackWindow();
   globalShortcut.unregisterAll();
   app.quit();

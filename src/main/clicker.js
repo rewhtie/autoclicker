@@ -14,11 +14,19 @@ const WM_LBUTTONDOWN = 0x0201;
 const WM_LBUTTONUP   = 0x0202;
 const MK_LBUTTON     = 0x0001;
 
+// Keyboard simulation goes to the foreground window (global).
+const keybd_event = user32.func('keybd_event', 'void', [uint, uint, uint, 'void*']);
+const KEYEVENTF_KEYUP = 0x0002;
+
 let clickCount = 0;
 let clickTimer = null;
 let onClickCallback = null;
 let onTickCallback = null;
 let pointCursor = 0; // index into the current points list, for round-robin
+
+let keyCount = 0;
+let keyTimer = null;
+let onKeyCallback = null;
 
 function doClick(x, y) {
   const hwnd = windowFromPoint({ x, y });
@@ -102,6 +110,49 @@ function setOnTickCallback(cb) {
   onTickCallback = cb;
 }
 
+// --- Keyboard pressing ---------------------------------------------------------
+
+function pressKey(vk) {
+  keybd_event(vk, 0, 0, null);
+  keybd_event(vk, 0, KEYEVENTF_KEYUP, null);
+  keyCount++;
+  if (onKeyCallback) onKeyCallback(keyCount);
+}
+
+function startKeyPressing(settings) {
+  if (keyTimer) return;
+  keyCount = 0;
+
+  function poll() {
+    const s = settings();
+    const vk = Number.isFinite(s.keyCode) ? s.keyCode : 0x20;
+    pressKey(vk);
+  }
+
+  poll();
+  keyTimer = setInterval(poll, settings().keyIntervalMs);
+}
+
+function stopKeyPressing() {
+  if (keyTimer) {
+    clearInterval(keyTimer);
+    keyTimer = null;
+  }
+  keyCount = 0;
+}
+
+function isKeyPressing() {
+  return keyTimer !== null;
+}
+
+function getKeyCount() {
+  return keyCount;
+}
+
+function setOnKeyCallback(cb) {
+  onKeyCallback = cb;
+}
+
 module.exports = {
   startClicking,
   stopClicking,
@@ -109,4 +160,9 @@ module.exports = {
   getClickCount,
   setOnClickCallback,
   setOnTickCallback,
+  startKeyPressing,
+  stopKeyPressing,
+  isKeyPressing,
+  getKeyCount,
+  setOnKeyCallback,
 };

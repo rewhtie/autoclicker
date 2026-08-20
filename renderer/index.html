@@ -27,13 +27,23 @@
   </section>
 
   <section class="card">
+    <h2>模拟方式</h2>
+    <div class="row">
+      <select id="mode-select" class="sel">
+        <option value="mouse">鼠标点击</option>
+        <option value="keyboard">键盘按键</option>
+      </select>
+    </div>
+  </section>
+
+  <section class="card" id="mouse-card">
     <h2>目标显示器</h2>
     <div class="row">
       <select id="display-select" class="sel"></select>
     </div>
   </section>
 
-  <section class="card">
+  <section class="card" id="position-card">
     <h2>点击位置</h2>
     <div class="row">
       <label class="checkbox-label">
@@ -57,13 +67,74 @@
     <p class="hint">左键添加，右键完成，ESC 取消。多点会按顺序循环点击。</p>
   </section>
 
-  <section class="card">
+  <section class="card" id="interval-card">
     <h2>点击间隔</h2>
     <div class="row">
       <input type="number" id="interval" min="100" max="3600000" value="5000" step="100">
       <span class="unit">毫秒</span>
     </div>
     <p class="hint">当前: <strong id="interval-display">5.0 秒</strong> 一次</p>
+  </section>
+
+  <section class="card hidden" id="keyboard-card">
+    <h2>键盘按键</h2>
+    <div class="row">
+      <select id="key-select" class="sel">
+        <option value="32">空格</option>
+        <option value="13">回车 Enter</option>
+        <option value="27">Esc</option>
+        <option value="9">Tab</option>
+        <option value="38">↑ Up</option>
+        <option value="40">↓ Down</option>
+        <option value="37">← Left</option>
+        <option value="39">→ Right</option>
+        <option value="65">A</option>
+        <option value="66">B</option>
+        <option value="67">C</option>
+        <option value="68">D</option>
+        <option value="69">E</option>
+        <option value="70">F</option>
+        <option value="71">G</option>
+        <option value="72">H</option>
+        <option value="73">I</option>
+        <option value="74">J</option>
+        <option value="75">K</option>
+        <option value="76">L</option>
+        <option value="77">M</option>
+        <option value="78">N</option>
+        <option value="79">O</option>
+        <option value="80">P</option>
+        <option value="81">Q</option>
+        <option value="82">R</option>
+        <option value="83">S</option>
+        <option value="84">T</option>
+        <option value="85">U</option>
+        <option value="86">V</option>
+        <option value="87">W</option>
+        <option value="88">X</option>
+        <option value="89">Y</option>
+        <option value="90">Z</option>
+        <option value="48">0</option>
+        <option value="49">1</option>
+        <option value="50">2</option>
+        <option value="51">3</option>
+        <option value="52">4</option>
+        <option value="53">5</option>
+        <option value="54">6</option>
+        <option value="55">7</option>
+        <option value="56">8</option>
+        <option value="57">9</option>
+      </select>
+    </div>
+  </section>
+
+  <section class="card hidden" id="key-interval-card">
+    <h2>按键间隔</h2>
+    <div class="row">
+      <input type="number" id="key-interval" min="100" max="3600000" value="5000" step="100">
+      <span class="unit">毫秒</span>
+    </div>
+    <p class="hint">当前: <strong id="key-interval-display">5.0 秒</strong> 一次</p>
   </section>
 
   <section class="card stats">

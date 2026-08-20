@@ -20,6 +20,15 @@ const schemeNew     = $("scheme-new");
 const schemeRename  = $("scheme-rename");
 const schemeDelete  = $("scheme-delete");
 const showClickEffect = $("show-click-effect");
+const modeSelect    = $("mode-select");
+const mouseCard     = $("mouse-card");
+const positionCard  = $("position-card");
+const intervalCard  = $("interval-card");
+const keyboardCard  = $("keyboard-card");
+const keyIntervalCard = $("key-interval-card");
+const keySelect     = $("key-select");
+const keyIntervalInput = $("key-interval");
+const keyIntervalDisplay = $("key-interval-display");
 const schemeDialogBackdrop = $("scheme-dialog-backdrop");
 const schemeDialogTitle = $("scheme-dialog-title");
 const schemeNameInput = $("scheme-name-input");
@@ -75,8 +84,13 @@ async function loadSettings() {
   showClickEffect.checked = s.showClickEffect !== false;
   intervalInput.value = s.intervalMs;
   updateIntervalDisplay(s.intervalMs);
+  modeSelect.value = s.mode === 'keyboard' ? 'keyboard' : 'mouse';
+  keyIntervalInput.value = s.keyIntervalMs;
+  updateKeyIntervalDisplay(s.keyIntervalMs);
+  if (s.keyCode) keySelect.value = String(s.keyCode);
   currentPoints = Array.isArray(s.points) ? s.points.slice() : [];
   renderPoints();
+  updateModeUI(s.mode);
   if (s.isClicking) updateUI(true);
 }
 
@@ -84,15 +98,32 @@ function updateIntervalDisplay(ms) {
   intervalDisplay.textContent = (ms / 1000).toFixed(1) + " 秒";
 }
 
+function updateKeyIntervalDisplay(ms) {
+  keyIntervalDisplay.textContent = (ms / 1000).toFixed(1) + " 秒";
+}
+
+function updateModeUI(mode) {
+  const isKeyboard = mode === 'keyboard';
+  mouseCard.classList.toggle('hidden', isKeyboard);
+  positionCard.classList.toggle('hidden', isKeyboard);
+  intervalCard.classList.toggle('hidden', isKeyboard);
+  keyboardCard.classList.toggle('hidden', !isKeyboard);
+  keyIntervalCard.classList.toggle('hidden', !isKeyboard);
+}
+
 function updateUI(running) {
   isRunning = running;
-  toggleBtn.textContent = running ? "停止点击" : "开始点击";
+  const isKeyboard = modeSelect.value === 'keyboard';
+  toggleBtn.textContent = running ? "停止" : "开始";
   toggleBtn.classList.toggle("running", running);
-  statusBadge.textContent = running ? "点击中" : "停止";
+  statusBadge.textContent = running ? (isKeyboard ? "按键中" : "点击中") : "停止";
   statusBadge.classList.toggle("active", running);
   useCenter.disabled = running;
   showClickEffect.disabled = running;
   intervalInput.disabled = running;
+  keySelect.disabled = running;
+  keyIntervalInput.disabled = running;
+  modeSelect.disabled = running;
   pickBtn.disabled = running;
   clearBtn.disabled = running;
   displaySelect.disabled = running;
@@ -111,6 +142,9 @@ function getCurrentFormSettings() {
     intervalMs: parseInt(intervalInput.value) || 5000,
     displayIndex: parseInt(displaySelect.value) || 0,
     showClickEffect: showClickEffect.checked,
+    mode: modeSelect.value === 'keyboard' ? 'keyboard' : 'mouse',
+    keyCode: parseInt(keySelect.value) || 0x20,
+    keyIntervalMs: parseInt(keyIntervalInput.value) || 5000,
   };
 }
 
@@ -261,6 +295,24 @@ intervalInput.addEventListener("input", async () => {
   await window.electronAPI.updateSettings({ intervalMs: v });
 });
 
+keyIntervalInput.addEventListener("input", async () => {
+  const v = parseInt(keyIntervalInput.value) || 5000;
+  updateKeyIntervalDisplay(v);
+  await window.electronAPI.updateSettings({ keyIntervalMs: v });
+});
+
+modeSelect.addEventListener("change", async () => {
+  const mode = modeSelect.value;
+  updateModeUI(mode);
+  updateUI(isRunning);
+  await window.electronAPI.updateSettings({ mode });
+});
+
+keySelect.addEventListener("change", async () => {
+  const v = parseInt(keySelect.value) || 0x20;
+  await window.electronAPI.updateSettings({ keyCode: v });
+});
+
 pickBtn.addEventListener("click", async () => {
   const idx = parseInt(displaySelect.value) || 0;
   await window.electronAPI.updateSettings({ displayIndex: idx });
@@ -280,6 +332,11 @@ window.electronAPI.onPositionsUpdated((data) => {
 });
 
 window.electronAPI.onClickPerformed((data) => {
+  clickCount = data.count;
+  clickCountEl.textContent = clickCount;
+});
+
+window.electronAPI.onKeyPerformed((data) => {
   clickCount = data.count;
   clickCountEl.textContent = clickCount;
 });

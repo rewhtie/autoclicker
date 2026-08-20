@@ -22,6 +22,7 @@ contextBridge.exposeInMainWorld("electronAPI", {
 
   onPositionsUpdated: (cb) => { ipcRenderer.on("positions-updated", (_e, d) => cb(d)); },
   onClickPerformed:   (cb) => { ipcRenderer.on("click-performed", (_e, d) => cb(d)); },
+  onKeyPerformed:     (cb) => { ipcRenderer.on("key-performed", (_e, d) => cb(d)); },
   onStateChanged:     (cb) => { ipcRenderer.on("state-changed", (_e, d) => cb(d)); },
   onOverlayReady:     (cb) => { ipcRenderer.on("overlay-ready", (_e, d) => cb(d)); },
   onRipple:           (cb) => { ipcRenderer.on("ripple", (_e, d) => cb(d)); }
