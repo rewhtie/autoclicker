@@ -1,5 +1,5 @@
 {
-  "name": "鼠标自动点击",
+  "name": "autoclicker",
   "version": "1.0.1",
   "description": "AutoClicker - Desktop Auto Clicker",
   "main": "src/main/index.js",
@@ -7,7 +7,9 @@
     "start": "electron .",
     "pack": "electron-builder --dir",
     "dist": "electron-builder",
-    "dist:win": "electron-builder --win"
+    "dist:win": "electron-builder --win",
+    "release": "node scripts/release.js",
+    "upload": "node scripts/upload.js"
   },
   "keywords": [],
   "author": "",
@@ -44,7 +46,8 @@
       "oneClick": false,
       "allowToChangeInstallationDirectory": true,
       "createDesktopShortcut": true,
-      "shortcutName": "AutoClicker"
+      "shortcutName": "AutoClicker",
+      "artifactName": "AutoClicker_${env.BUILD_DATE}.exe"
     },
     "extraMetadata": {
       "main": "src/main/index.js"

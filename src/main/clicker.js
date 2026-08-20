@@ -1,18 +1,16 @@
 const koffi = require('koffi');
-const { int, uint, uint64, int64, long: koffiLong } = koffi.types;
+const { int, uint } = koffi.types;
 
 const user32 = koffi.load('user32.dll');
 
-const POINT = koffi.struct('POINT', { x: koffiLong, y: koffiLong });
-const HWND = koffi.pointer(koffi.types.void);
+// Mouse click is injected at the hardware-input layer (mouse_event wraps
+// SendInput) so it reaches games/DirectInput and exclusive-fullscreen windows
+// that ignore windowed WM_LBUTTONDOWN / WM_LBUTTONUP messages.
+const setCursorPos = user32.func('SetCursorPos', int, [int, int]);
+const mouse_event = user32.func('mouse_event', 'void', [uint, uint, uint, uint, 'void*']);
 
-const windowFromPoint = user32.func('WindowFromPoint', HWND, [POINT]);
-const screenToClient = user32.func('ScreenToClient', int, [HWND, koffi.pointer(POINT)]);
-const sendMsg = user32.func('SendMessageW', int64, [HWND, uint, uint64, int64]);
-
-const WM_LBUTTONDOWN = 0x0201;
-const WM_LBUTTONUP   = 0x0202;
-const MK_LBUTTON     = 0x0001;
+const MOUSEEVENTF_LEFTDOWN = 0x0002;
+const MOUSEEVENTF_LEFTUP   = 0x0004;
 
 // Keyboard simulation goes to the foreground window (global).
 const keybd_event = user32.func('keybd_event', 'void', [uint, uint, uint, 'void*']);
@@ -29,17 +27,11 @@ let keyTimer = null;
 let onKeyCallback = null;
 
 function doClick(x, y) {
-  const hwnd = windowFromPoint({ x, y });
-  if (!hwnd) return;
-
-  const outPt = koffi.alloc(POINT, 1);
-  koffi.encode(outPt, POINT, { x, y });
-  screenToClient(hwnd, koffi.address(outPt));
-
-  const { x: cx, y: cy } = koffi.decode(outPt, POINT);
-  const lParam = (cy << 16) | (cx & 0xFFFF);
-  sendMsg(hwnd, WM_LBUTTONDOWN, MK_LBUTTON, lParam);
-  sendMsg(hwnd, WM_LBUTTONUP, 0, lParam);
+  // x/y are already physical screen coordinates (see startClicking's DIP →
+  // physical conversion). Move the real cursor and inject a global click.
+  setCursorPos(x, y);
+  mouse_event(MOUSEEVENTF_LEFTDOWN, 0, 0, 0, null);
+  mouse_event(MOUSEEVENTF_LEFTUP, 0, 0, 0, null);
 
   clickCount++;
   if (onClickCallback) onClickCallback(clickCount);
